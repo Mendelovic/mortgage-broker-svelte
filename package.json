@@ -54,6 +54,7 @@
 	},
 	"dependencies": {
 		"@supabase/ssr": "^0.7.0",
-		"@supabase/supabase-js": "^2.76.1"
+		"@supabase/supabase-js": "^2.76.1",
+		"mode-watcher": "^1.1.0"
 	}
 }
