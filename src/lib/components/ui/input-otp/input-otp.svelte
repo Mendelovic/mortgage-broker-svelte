@@ -3,11 +3,18 @@
 	import { cn } from "$lib/utils.js";
 
 	let {
-		ref = $bindable(null),
+		ref = $bindable<HTMLElement | null>(null),
 		class: className,
 		value = $bindable(""),
 		...restProps
 	}: InputOTPPrimitive.RootProps = $props();
+
+	$effect(() => {
+		if (!ref) return;
+
+		ref.setAttribute("dir", "ltr");
+		ref.style.direction = "ltr";
+	});
 </script>
 
 <InputOTPPrimitive.Root
