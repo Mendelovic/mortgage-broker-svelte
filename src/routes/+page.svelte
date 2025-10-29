@@ -232,45 +232,41 @@
 			</div>
 		</div>
 		<div class="pointer-events-none fixed inset-x-0 bottom-0 z-10">
-			<div class="relative px-4 pb-4 sm:px-8">
-				<div class="pointer-events-auto mx-auto w-full max-w-3xl">
-					<div class="rounded-2xl border border-border/60 bg-background/95 shadow-xl backdrop-blur">
-						<form
-							class="p-4"
-							onsubmit={(event) => {
-								event.preventDefault();
-								void handleSend();
-							}}
-						>
-							<div class="flex items-end gap-3">
-								<textarea
-									class="max-h-40 min-h-[52px] flex-1 resize-none rounded-xl border border-input/40 bg-background/90 px-4 py-3 text-base leading-6 text-foreground transition outline-none placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/40 disabled:opacity-70"
-									bind:value={composedMessage}
-									bind:this={composer}
-									oninput={autoResize}
-									onkeydown={handleKeyDown}
-									placeholder="תארו את הנכס, ההון העצמי וההחזר הרצוי — ואכין לכם תרחיש מימון מלא."
-									rows="1"
-									aria-label="הקלדת הודעה"
-									disabled={chatLoading.isSending}
-								></textarea>
-								<button
-									class="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-									type="submit"
-									aria-label="שליחת הודעה"
-									disabled={chatLoading.isSending || composedMessage.trim().length === 0}
-								>
-									{#if chatLoading.isSending}
-										<Loader2Icon class="h-4 w-4 animate-spin" />
-									{:else}
-										<SendIcon class="h-4 w-4" />
-									{/if}
-								</button>
-							</div>
-						</form>
-					</div>
+			<form
+				class="pointer-events-auto mx-auto flex w-full max-w-3xl items-end gap-3 px-4 pb-4 sm:px-8"
+				onsubmit={(event) => {
+					event.preventDefault();
+					void handleSend();
+				}}
+			>
+				<div
+					class="flex flex-1 items-end gap-3 rounded-2xl border border-border/60 bg-background/95 p-3 shadow focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/35 focus-within:ring-offset-2 focus-within:ring-offset-background dark:border-border/40 dark:bg-background/80"
+				>
+					<textarea
+						class="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-3 py-2 text-base text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none disabled:opacity-70 dark:placeholder:text-muted-foreground/50"
+						bind:value={composedMessage}
+						bind:this={composer}
+						oninput={autoResize}
+						onkeydown={handleKeyDown}
+						placeholder="תארו את הנכס, ההון העצמי וההחזר הרצוי — ואכין לכם תרחיש מימון מלא."
+						rows="1"
+						aria-label="הקלדת הודעה"
+						disabled={chatLoading.isSending}
+					></textarea>
+					<button
+						class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+						type="submit"
+						aria-label="שליחת הודעה"
+						disabled={chatLoading.isSending || composedMessage.trim().length === 0}
+					>
+						{#if chatLoading.isSending}
+							<Loader2Icon class="h-4 w-4 animate-spin" />
+						{:else}
+							<SendIcon class="h-4 w-4" />
+						{/if}
+					</button>
 				</div>
-			</div>
+			</form>
 		</div>
 	</div>
 </div>
