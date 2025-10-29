@@ -63,7 +63,7 @@
 			return preview;
 		}
 		if (preview) {
-			return `עדכון היועץ: ${preview}`;
+			return `${preview}`;
 		}
 		return '';
 	}
