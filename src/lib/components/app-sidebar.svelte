@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import MessageSquareIcon from '@lucide/svelte/icons/message-square';
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import SunIcon from '@lucide/svelte/icons/sun';
@@ -73,37 +72,36 @@
 		if (depth > 5) return '';
 		if (value === null || value === undefined) return '';
 		if (typeof value === 'string') return value.trim();
-	if (typeof value === 'number' || typeof value === 'boolean') return `${value}`;
-	if (Array.isArray(value)) {
-		return value
-			.map((item) => extractText(item, depth + 1))
-			.filter(Boolean)
-			.join(' ');
-	}
-	if (typeof value === 'object') {
-		const record = value as Record<string, unknown>;
-		if (typeof record.text === 'string') {
-			return record.text.trim();
-		}
-		if (Array.isArray(record.content)) {
-			return record.content
+		if (typeof value === 'number' || typeof value === 'boolean') return `${value}`;
+		if (Array.isArray(value)) {
+			return value
 				.map((item) => extractText(item, depth + 1))
 				.filter(Boolean)
 				.join(' ');
 		}
-		return Object.values(record)
-			.map((item) => extractText(item, depth + 1))
-			.filter(Boolean)
-			.join(' ');
+		if (typeof value === 'object') {
+			const record = value as Record<string, unknown>;
+			if (typeof record.text === 'string') {
+				return record.text.trim();
+			}
+			if (Array.isArray(record.content)) {
+				return record.content
+					.map((item) => extractText(item, depth + 1))
+					.filter(Boolean)
+					.join(' ');
+			}
+			return Object.values(record)
+				.map((item) => extractText(item, depth + 1))
+				.filter(Boolean)
+				.join(' ');
+		}
+		return '';
 	}
-	return '';
-}
 </script>
 
 <Sidebar.Root side="right" collapsible="offcanvas">
 	<Sidebar.Header class="flex items-center justify-between px-4 py-4" dir="rtl">
 		<div class="flex items-center gap-2 text-base font-semibold text-foreground">
-			<MessageSquareIcon class="h-5 w-5 text-primary" />
 			<span>שיחות</span>
 		</div>
 		<Button class="relative" type="button" variant="outline" size="icon" onclick={toggleMode}>
@@ -119,12 +117,7 @@
 
 	<Sidebar.Content class="flex flex-1 flex-col gap-4 px-4 py-4" dir="rtl">
 		<div class="flex items-center justify-between gap-2">
-			<span class="text-sm font-semibold text-muted-foreground">שיחות פעילות</span>
-			<Button
-				class="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-				type="button"
-				onclick={handleCreateThread}
-			>
+			<Button class="w-full rounded-xl" type="button" onclick={handleCreateThread}>
 				<PlusIcon class="size-4" />
 				<span>שיחה חדשה</span>
 			</Button>
@@ -161,15 +154,14 @@
 						>
 							<div class="flex items-start justify-between gap-3">
 								<div class="space-y-1 overflow-hidden">
-									<p class="text-sm font-semibold truncate text-foreground">
+									<p class="truncate text-sm font-semibold text-foreground">
 										{formatSummaryTitle(summary, index)}
 									</p>
-									<p class="text-xs text-muted-foreground truncate">
-										{summary.message_count} הודעות · עודכן {formatUpdatedAt(summary.updated_at)}
+									<p class="truncate text-xs text-muted-foreground">
+										{summary.message_count} הודעות · הודעה אחרונה {formatUpdatedAt(
+											summary.updated_at
+										)}
 									</p>
-								</div>
-								<div class="flex flex-col items-end gap-1 text-[0.65rem] text-muted-foreground">
-									<span>{summary.session_id.slice(-8)}</span>
 								</div>
 							</div>
 						</button>
