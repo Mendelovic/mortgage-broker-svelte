@@ -228,7 +228,7 @@
 									{message.text}
 								</div>
 							</div>
-						{:else}
+						{:else if message.role === 'user'}
 							<div class="flex justify-end" dir="ltr">
 								<div
 									class="max-w-[82%] rounded-3xl bg-primary px-5 py-4 text-sm leading-relaxed text-primary-foreground shadow-lg sm:text-base"
@@ -243,7 +243,7 @@
 				{#if chatLoading.isSending}
 					<div class="flex justify-start">
 						<div
-							class=" relative inline-flex w-full max-w-sm flex-col gap-3 overflow-hidden rounded-3xl px-5 py-4 text-muted-foreground"
+							class="relative inline-flex w-full max-w-sm flex-col gap-3 overflow-hidden rounded-3xl px-5 py-4 text-muted-foreground"
 							role="status"
 						>
 							<div class="loading-line h-3 w-1/2"></div>
