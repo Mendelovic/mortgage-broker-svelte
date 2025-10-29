@@ -2,6 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import { fromStore } from 'svelte/store';
 	import Loader2Icon from '@lucide/svelte/icons/loader-2';
+	import AlertTriangleIcon from '@lucide/svelte/icons/alert-triangle';
 	import SendIcon from '@lucide/svelte/icons/send';
 	import type { SessionMessage } from '$lib/api/types';
 	import {
@@ -16,6 +17,7 @@
 	let messagesPane: HTMLDivElement | null = null;
 	let composer: HTMLTextAreaElement | null = null;
 	let pendingMessages = $state<DisplayMessage[]>([]);
+	let sendErrorMessage = $state<DisplayMessage | null>(null);
 
 	const chatLoadingRune = fromStore(chatLoadingStore);
 	const chatLoading = $derived(chatLoadingRune.current);
@@ -30,13 +32,15 @@
 		id: string;
 		role: 'assistant' | 'user' | 'system';
 		text: string;
+		isError?: boolean;
 	};
 
 	const messages = $derived([
 		...(selectedSession?.messages ?? [])
 			.map(transformSessionMessage)
 			.filter((message) => message.text.length > 0),
-		...pendingMessages
+		...pendingMessages,
+		...(sendErrorMessage ? [sendErrorMessage] : [])
 	]);
 	const isConversationEmpty = $derived(messages.length === 0);
 
@@ -82,7 +86,8 @@
 	}
 
 	async function handleSend() {
-		const trimmed = composedMessage.trim();
+		const originalMessage = composedMessage;
+		const trimmed = originalMessage.trim();
 		if (!trimmed || chatLoading.isSending) return;
 
 		const now = new Date();
@@ -93,14 +98,28 @@
 		};
 
 		pendingMessages = [...pendingMessages, optimisticMessage];
+		sendErrorMessage = null;
+		composedMessage = '';
+		resetComposerHeight();
 
 		try {
 			await sendChatMessage({ message: trimmed });
-			composedMessage = '';
-			resetComposerHeight();
 			pendingMessages = [];
+			sendErrorMessage = null;
 		} catch (error) {
 			pendingMessages = [];
+			sendErrorMessage = {
+				id: `error-${now.getTime()}`,
+				role: 'assistant',
+				text: 'אירעה שגיאה בעת שליחת ההודעה. נסו שוב.',
+				isError: true
+			};
+			composedMessage = originalMessage;
+			await tick();
+			if (composer) {
+				composer.style.height = 'auto';
+				composer.style.height = `${Math.min(composer.scrollHeight, 200)}px`;
+			}
 			console.error('Failed to send message', error);
 		} finally {
 			await tick();
@@ -192,7 +211,16 @@
 					</div>
 				{:else}
 					{#each messages as message (message.id)}
-						{#if message.role === 'assistant'}
+						{#if message.isError}
+							<div class="flex justify-start">
+								<div
+									class="flex max-w-md items-start gap-3 rounded-3xl border border-destructive/50 bg-destructive/10 px-5 py-4 text-sm leading-relaxed text-destructive shadow-sm sm:text-base"
+								>
+									<AlertTriangleIcon class="mt-1 h-5 w-5 shrink-0" />
+									<p class="whitespace-pre-wrap">{message.text}</p>
+								</div>
+							</div>
+						{:else if message.role === 'assistant'}
 							<div class="flex justify-start">
 								<div
 									class="max-w-4xl text-sm leading-relaxed whitespace-pre-wrap text-foreground sm:text-base"
