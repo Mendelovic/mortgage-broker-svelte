@@ -215,10 +215,17 @@
 				{#if chatLoading.isSending}
 					<div class="flex justify-start">
 						<div
-							class="inline-flex items-center gap-2 rounded-3xl border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground"
+							class=" relative inline-flex w-full max-w-sm flex-col gap-3 overflow-hidden rounded-3xl px-5 py-4 text-muted-foreground"
+							role="status"
 						>
-							<Loader2Icon class="h-4 w-4 animate-spin" />
-							הודעה נשלחת...
+							<div class="loading-line h-3 w-1/2"></div>
+							<div class="loading-line h-3 w-11/12"></div>
+							<div class="loading-line h-3 w-2/3"></div>
+							<div class="loading-dot-row">
+								<span class="loading-dot"></span>
+								<span class="loading-dot"></span>
+								<span class="loading-dot"></span>
+							</div>
 						</div>
 					</div>
 				{/if}
@@ -267,3 +274,70 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	@keyframes shimmer {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
+
+	@keyframes floatGlow {
+		0%,
+		100% {
+			transform: translate3d(-8%, -8%, 0) scale(1);
+		}
+		50% {
+			transform: translate3d(8%, 8%, 0) scale(1.05);
+		}
+	}
+
+	@keyframes dotPulse {
+		0%,
+		100% {
+			transform: translateY(0);
+			opacity: 0.35;
+		}
+		50% {
+			transform: translateY(-35%);
+			opacity: 1;
+		}
+	}
+
+	.loading-line {
+		border-radius: 9999px;
+		background: linear-gradient(
+			90deg,
+			color-mix(in srgb, var(--muted-foreground) 15%, transparent) 0%,
+			color-mix(in srgb, var(--muted-foreground) 55%, white 30%) 50%,
+			color-mix(in srgb, var(--muted-foreground) 15%, transparent) 100%
+		);
+		background-size: 200% 100%;
+		animation: shimmer 1.6s ease-in-out infinite;
+	}
+
+	.loading-dot-row {
+		display: inline-flex;
+		gap: 0.35rem;
+		padding-top: 0.2rem;
+	}
+
+	.loading-dot {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 9999px;
+		background: color-mix(in srgb, var(--primary) 42%, white 30%);
+		animation: dotPulse 1.2s ease-in-out infinite;
+	}
+
+	.loading-dot:nth-child(2) {
+		animation-delay: 0.12s;
+	}
+
+	.loading-dot:nth-child(3) {
+		animation-delay: 0.24s;
+	}
+</style>
