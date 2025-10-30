@@ -312,10 +312,10 @@
 				novalidate
 			>
 				<div
-					class="flex flex-1 items-end rounded-2xl border border-border/60 bg-background/95 p-2.5 shadow focus-within:ring-2 focus-within:ring-primary/35 sm:p-3"
+					class="flex flex-1 items-end rounded-3xl border border-primary/30 bg-primary/10 p-2.5 shadow-xl backdrop-blur focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/30 sm:p-3 dark:border-primary/40 dark:bg-primary/20"
 				>
 					<textarea
-						class="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-3 py-2 text-base leading-relaxed focus-visible:outline-none disabled:opacity-70"
+						class="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-3 py-2 text-base leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none disabled:opacity-70"
 						bind:value={composedMessage}
 						bind:this={composer}
 						oninput={autoResize}
