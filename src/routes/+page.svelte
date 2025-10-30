@@ -45,7 +45,6 @@
 		...pendingMessages,
 		...(sendErrorMessage ? [sendErrorMessage] : [])
 	]);
-	const isConversationEmpty = $derived(messages.length === 0);
 
 	onMount(() => {
 		let destroyed = false;
@@ -179,9 +178,7 @@
 	}
 
 	function extractMessageText(value: unknown, depth = 0): string {
-		if (depth > 5) {
-			return '';
-		}
+		if (depth > 5) return '';
 		if (value === null || value === undefined) return '';
 		if (typeof value === 'string') return value.trim();
 		if (typeof value === 'number' || typeof value === 'boolean') return `${value}`;
@@ -233,53 +230,35 @@
 			class="safe-area-scroll flex-1 overflow-y-auto px-4 pt-6 sm:px-8 sm:pt-10"
 			bind:this={messagesPane}
 		>
-			<div
-				class="mx-auto flex w-full max-w-3xl flex-col gap-4"
-				role="log"
-				aria-live="polite"
-				aria-atomic="false"
-				aria-busy={chatLoading.isSending}
-			>
-				{#if isConversationEmpty}
-					<div
-						class="rounded-3xl border border-dashed border-muted bg-muted/40 px-8 py-12 text-center text-sm text-muted-foreground"
-					>
-						{#if selectedSessionId}
-							לא נמצאו הודעות לשיחה זו. התחילו הודעה חדשה כדי להמשיך את הדיון.
-						{:else}
-							פתחו שיחה חדשה כדי לבנות סימולציית מימון חכמה על בסיס פרטי הלקוח.
-						{/if}
-					</div>
-				{:else}
-					{#each messages as message (message.id)}
-						{#if message.isError}
-							<div class="flex justify-start">
-								<div
-									class="flex max-w-[92vw] items-start gap-3 rounded-3xl border border-destructive/50 bg-destructive/10 px-5 py-4 text-sm leading-relaxed text-destructive shadow-sm sm:max-w-md sm:text-base"
-								>
-									<AlertTriangleIcon class="mt-1 h-5 w-5 shrink-0" />
-									<p class="whitespace-pre-wrap">{message.text}</p>
-								</div>
+			<div class="mx-auto flex w-full max-w-3xl flex-col gap-4" role="log">
+				{#each messages as message (message.id)}
+					{#if message.isError}
+						<div class="flex justify-start">
+							<div
+								class="flex max-w-[92vw] items-start gap-3 rounded-3xl border border-destructive/50 bg-destructive/10 px-5 py-4 text-sm leading-relaxed text-destructive shadow-sm sm:max-w-md sm:text-base"
+							>
+								<AlertTriangleIcon class="mt-1 size-5 shrink-0" />
+								<p class="whitespace-pre-wrap">{message.text}</p>
 							</div>
-						{:else if message.role === 'assistant'}
-							<div class="flex justify-start">
-								<div
-									class="max-w-[92vw] text-sm leading-relaxed whitespace-pre-wrap text-foreground sm:max-w-4xl sm:text-base"
-								>
-									{message.text}
-								</div>
+						</div>
+					{:else if message.role === 'assistant'}
+						<div class="flex justify-start">
+							<div
+								class="max-w-[92vw] text-sm leading-relaxed whitespace-pre-wrap text-foreground sm:max-w-4xl sm:text-base"
+							>
+								{message.text}
 							</div>
-						{:else if message.role === 'user'}
-							<div class="flex justify-end" dir="ltr">
-								<div
-									class="max-w-[92vw] rounded-3xl bg-primary px-5 py-4 text-sm leading-relaxed text-primary-foreground shadow-lg sm:max-w-[82%] sm:text-base"
-								>
-									<p class="text-right whitespace-pre-wrap" dir="auto">{message.text}</p>
-								</div>
+						</div>
+					{:else if message.role === 'user'}
+						<div class="flex justify-end" dir="ltr">
+							<div
+								class="max-w-[92vw] rounded-3xl bg-primary px-5 py-4 text-sm leading-relaxed text-primary-foreground shadow-lg sm:max-w-[82%] sm:text-base"
+							>
+								<p class="text-right whitespace-pre-wrap" dir="auto">{message.text}</p>
 							</div>
-						{/if}
-					{/each}
-				{/if}
+						</div>
+					{/if}
+				{/each}
 
 				{#if chatLoading.isSending}
 					<div class="flex justify-start">
