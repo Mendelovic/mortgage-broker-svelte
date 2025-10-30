@@ -184,7 +184,7 @@
 			variant="outline"
 			onclick={() => onLogout()}
 		>
-			התנתקות
+			התנתק
 		</Button>
 	</Sidebar.Footer>
 
