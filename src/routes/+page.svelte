@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { onMount, tick } from 'svelte';
 	import { fromStore } from 'svelte/store';
 	import Loader2Icon from '@lucide/svelte/icons/loader-2';
@@ -18,6 +19,8 @@
 	let composer: HTMLTextAreaElement | null = null;
 	let pendingMessages = $state<DisplayMessage[]>([]);
 	let sendErrorMessage = $state<DisplayMessage | null>(null);
+	let reduceMotion = false;
+	let prefersReducedMotionQuery: MediaQueryList | null = null;
 
 	const chatLoadingRune = fromStore(chatLoadingStore);
 	const chatLoading = $derived(chatLoadingRune.current);
@@ -44,10 +47,37 @@
 	]);
 	const isConversationEmpty = $derived(messages.length === 0);
 
-	onMount(async () => {
-		await initializeChat();
-		await tick();
-		scrollToBottom();
+	onMount(() => {
+		let destroyed = false;
+
+		if (browser) {
+			prefersReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+			reduceMotion = prefersReducedMotionQuery.matches;
+			if (typeof prefersReducedMotionQuery.addEventListener === 'function') {
+				prefersReducedMotionQuery.addEventListener('change', handleReduceMotionPreference);
+			} else if (typeof prefersReducedMotionQuery.addListener === 'function') {
+				// Fallback for Safari < 14
+				prefersReducedMotionQuery.addListener(handleReduceMotionPreference);
+			}
+		}
+
+		void (async () => {
+			await initializeChat();
+			if (destroyed) return;
+
+			await tick();
+			scrollToBottom();
+		})();
+
+		return () => {
+			destroyed = true;
+			if (!prefersReducedMotionQuery) return;
+			if (typeof prefersReducedMotionQuery.removeEventListener === 'function') {
+				prefersReducedMotionQuery.removeEventListener('change', handleReduceMotionPreference);
+			} else if (typeof prefersReducedMotionQuery.removeListener === 'function') {
+				prefersReducedMotionQuery.removeListener(handleReduceMotionPreference);
+			}
+		};
 	});
 
 	let lastSignature = '';
@@ -67,11 +97,16 @@
 	async function scrollToBottom() {
 		await tick();
 		if (messagesPane) {
+			const behavior: ScrollBehavior = reduceMotion ? 'auto' : 'smooth';
 			messagesPane.scrollTo({
 				top: messagesPane.scrollHeight,
-				behavior: 'smooth'
+				behavior
 			});
 		}
+	}
+
+	function handleReduceMotionPreference(event: MediaQueryListEvent | MediaQueryList) {
+		reduceMotion = event.matches;
 	}
 
 	function autoResize(event: Event) {
@@ -192,13 +227,19 @@
 	}
 </script>
 
-<div class="flex h-[calc(100dvh-5rem)] overflow-hidden bg-background text-foreground">
+<div class="chat-layout flex w-full overflow-hidden">
 	<div class="relative flex flex-1 flex-col overflow-hidden">
 		<div
-			class="flex-1 scroll-pb-56 overflow-y-auto px-4 py-6 pb-56 sm:px-8"
+			class="safe-area-scroll flex-1 overflow-y-auto px-4 pt-6 sm:px-8 sm:pt-10"
 			bind:this={messagesPane}
 		>
-			<div class="mx-auto flex w-full max-w-3xl flex-col gap-4">
+			<div
+				class="mx-auto flex w-full max-w-3xl flex-col gap-4"
+				role="log"
+				aria-live="polite"
+				aria-atomic="false"
+				aria-busy={chatLoading.isSending}
+			>
 				{#if isConversationEmpty}
 					<div
 						class="rounded-3xl border border-dashed border-muted bg-muted/40 px-8 py-12 text-center text-sm text-muted-foreground"
@@ -214,7 +255,7 @@
 						{#if message.isError}
 							<div class="flex justify-start">
 								<div
-									class="flex max-w-md items-start gap-3 rounded-3xl border border-destructive/50 bg-destructive/10 px-5 py-4 text-sm leading-relaxed text-destructive shadow-sm sm:text-base"
+									class="flex max-w-[92vw] items-start gap-3 rounded-3xl border border-destructive/50 bg-destructive/10 px-5 py-4 text-sm leading-relaxed text-destructive shadow-sm sm:max-w-md sm:text-base"
 								>
 									<AlertTriangleIcon class="mt-1 h-5 w-5 shrink-0" />
 									<p class="whitespace-pre-wrap">{message.text}</p>
@@ -223,7 +264,7 @@
 						{:else if message.role === 'assistant'}
 							<div class="flex justify-start">
 								<div
-									class="max-w-4xl text-sm leading-relaxed whitespace-pre-wrap text-foreground sm:text-base"
+									class="max-w-[92vw] text-sm leading-relaxed whitespace-pre-wrap text-foreground sm:max-w-4xl sm:text-base"
 								>
 									{message.text}
 								</div>
@@ -231,7 +272,7 @@
 						{:else if message.role === 'user'}
 							<div class="flex justify-end" dir="ltr">
 								<div
-									class="max-w-[82%] rounded-3xl bg-primary px-5 py-4 text-sm leading-relaxed text-primary-foreground shadow-lg sm:text-base"
+									class="max-w-[92vw] rounded-3xl bg-primary px-5 py-4 text-sm leading-relaxed text-primary-foreground shadow-lg sm:max-w-[82%] sm:text-base"
 								>
 									<p class="text-right whitespace-pre-wrap" dir="auto">{message.text}</p>
 								</div>
@@ -259,30 +300,35 @@
 				{/if}
 			</div>
 		</div>
-		<div class="pointer-events-none fixed inset-x-0 bottom-0 z-10">
+		<div
+			class="safe-area-inset shrink-0 bg-linear-to-t from-background via-background/95 to-background/80 px-4 pt-2 backdrop-blur-sm sm:px-8 sm:pt-4"
+		>
 			<form
-				class="pointer-events-auto mx-auto flex w-full max-w-3xl items-end gap-3 px-4 pb-4 sm:px-8"
+				class="mx-auto flex w-full max-w-3xl items-end gap-2 sm:gap-3"
 				onsubmit={(event) => {
 					event.preventDefault();
 					void handleSend();
 				}}
+				novalidate
 			>
 				<div
-					class="flex flex-1 items-end gap-3 rounded-2xl border border-border/60 bg-background/95 p-3 shadow focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/35 focus-within:ring-offset-2 focus-within:ring-offset-background dark:border-border/40 dark:bg-background/80"
+					class="flex flex-1 items-end rounded-2xl border border-border/60 bg-background/95 p-2.5 shadow focus-within:ring-2 focus-within:ring-primary/35 sm:p-3"
 				>
 					<textarea
-						class="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-3 py-2 text-base text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none disabled:opacity-70 dark:placeholder:text-muted-foreground/50"
+						class="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-3 py-2 text-base leading-relaxed focus-visible:outline-none disabled:opacity-70"
 						bind:value={composedMessage}
 						bind:this={composer}
 						oninput={autoResize}
 						onkeydown={handleKeyDown}
-						placeholder="תארו את הנכס, ההון העצמי וההחזר הרצוי — ואכין לכם תרחיש מימון מלא."
+						dir="rtl"
+						inputmode="text"
+						placeholder="אני מעוניין לקנות נכס ב..."
+						enterkeyhint="send"
 						rows="1"
-						aria-label="הקלדת הודעה"
 						disabled={chatLoading.isSending}
 					></textarea>
 					<button
-						class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+						class="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
 						type="submit"
 						aria-label="שליחת הודעה"
 						disabled={chatLoading.isSending || composedMessage.trim().length === 0}
@@ -300,6 +346,69 @@
 </div>
 
 <style>
+	.chat-layout {
+		min-height: 100vh;
+		height: 100vh;
+	}
+
+	@supports (height: 100svh) {
+		.chat-layout {
+			min-height: 100svh;
+			height: 100svh;
+		}
+	}
+
+	@supports (height: 100dvh) {
+		.chat-layout {
+			min-height: 100dvh;
+			height: 100dvh;
+		}
+	}
+
+	.safe-area-scroll {
+		--chat-scroll-pb: 1.5rem;
+		padding-bottom: var(--chat-scroll-pb);
+		scroll-padding-bottom: var(--chat-scroll-pb);
+	}
+
+	@media (min-width: 640px) {
+		.safe-area-scroll {
+			--chat-scroll-pb: 2rem;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.safe-area-scroll {
+			--chat-scroll-pb: 2.5rem;
+		}
+	}
+
+	.safe-area-inset {
+		padding-bottom: 1rem;
+	}
+
+	@supports (padding-bottom: constant(safe-area-inset-bottom)) {
+		.safe-area-scroll {
+			padding-bottom: calc(var(--chat-scroll-pb) + constant(safe-area-inset-bottom));
+			scroll-padding-bottom: calc(var(--chat-scroll-pb) + constant(safe-area-inset-bottom));
+		}
+
+		.safe-area-inset {
+			padding-bottom: calc(1rem + constant(safe-area-inset-bottom));
+		}
+	}
+
+	@supports (padding-bottom: env(safe-area-inset-bottom)) {
+		.safe-area-scroll {
+			padding-bottom: calc(var(--chat-scroll-pb) + env(safe-area-inset-bottom));
+			scroll-padding-bottom: calc(var(--chat-scroll-pb) + env(safe-area-inset-bottom));
+		}
+
+		.safe-area-inset {
+			padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+		}
+	}
+
 	@keyframes shimmer {
 		0% {
 			background-position: 200% 0;
