@@ -16,6 +16,7 @@ declare global {
 				supabase: SupabaseClient;
 				session: Session | null;
 				user: User | null;
+				sidebarOpen: boolean;
 			}
 			// interface PageState {}
 			// interface Platform {}

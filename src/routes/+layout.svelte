@@ -10,6 +10,9 @@
 	let { children, data } = $props();
 	const user = $derived(data?.user);
 	const supabase = $derived(data.supabase);
+	const initialSidebarOpen = $derived(
+		(data as typeof data & { sidebarOpen?: boolean }).sidebarOpen ?? true
+	);
 
 	async function handleLogout() {
 		try {
@@ -29,7 +32,7 @@
 <ModeWatcher />
 
 {#if user}
-	<Sidebar.Provider>
+	<Sidebar.Provider open={initialSidebarOpen}>
 		<AppSidebar onLogout={handleLogout} />
 
 		<div class="flex min-h-svh w-full flex-1 flex-col">

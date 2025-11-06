@@ -1,3 +1,33 @@
+export type DocumentKeyValue = {
+	key: string;
+	value: string;
+	confidence?: number | null;
+	page_number?: number | null;
+	field_path?: string | null;
+};
+
+export type DocumentTable = {
+	row_count?: number | null;
+	column_count?: number | null;
+	rows: string[][];
+	confidence?: number | null;
+};
+
+export type DocumentArtifactSummary = {
+	id: string;
+	display_name: string;
+	document_type: string;
+	uploaded_at: string;
+	extracted_at?: string | null;
+	mime_type?: string | null;
+	locale?: string | null;
+	warnings: string[];
+	key_value_pairs: DocumentKeyValue[];
+	tables: DocumentTable[];
+	text_preview?: string | null;
+	text_truncated: boolean;
+};
+
 export type SessionMessage = {
 	id: number;
 	role: 'assistant' | 'user' | string;
@@ -28,6 +58,7 @@ export type SessionDetail = {
 	engine_recommended_index?: number | null;
 	advisor_recommended_index?: number | null;
 	term_sweep?: OptimizationTermSweepEntry[] | null;
+	documents?: DocumentArtifactSummary[] | null;
 };
 
 export type OptimizationSummary = {
@@ -152,4 +183,5 @@ export type ChatResponse = {
 	engine_recommended_index?: number | null;
 	advisor_recommended_index?: number | null;
 	term_sweep?: OptimizationTermSweepEntry[] | null;
+	documents?: DocumentArtifactSummary[] | null;
 };

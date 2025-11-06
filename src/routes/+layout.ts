@@ -27,9 +27,12 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 		data: { user }
 	} = await supabase.auth.getUser();
 
+	const sidebarOpen = (data as typeof data & { sidebarOpen?: boolean }).sidebarOpen ?? true;
+
 	return {
 		supabase,
 		session,
-		user
+		user,
+		sidebarOpen
 	};
 };
